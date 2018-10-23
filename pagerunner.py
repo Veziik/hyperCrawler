@@ -5,6 +5,7 @@ from urllib.error import URLError
 from link_finder import LinkFinder
 from threading import RLock, current_thread
 from time import gmtime, strftime
+import threading
 from domain import *
 import queue
 
@@ -18,10 +19,11 @@ class Pagerunner:
 	notvisitedLock = RLock()	#Threading Lock for adding to the queue
 	tabooWords = set()			#Keywords that ban links from being searched by the runner
 	debugOn = False				#Enables/Disables debug text #Next Line is the headers the runner uses when sending a request
-	function = None
+	function = None	
+	threads = []
 	headers = {'Connection' : 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',}
 
-	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=None, newDebugOn=None ):
+	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=None, newDebugOn=None, newThreadCount = 1):
 		if newStartAddress and Pagerunner.notvisited.empty():
 			Pagerunner.startAddress = newStartAddress
 			Pagerunner.addLink(newStartAddress)
@@ -33,17 +35,30 @@ class Pagerunner:
 			Pagerunner.tabooWords.add(newTabooWords)
 		if newDebugOn:
 			Pagerunner.debugOn = newDebugOn
+		createThreads(newThreadCount)
+
 		
 	@staticmethod
 	def work(threadName):
 		while not Pagerunner.queueEmpty():
 			Pagerunner.crawlPage(threadName, Pagerunner.nextLink())
 
+	@staticmethod
+	def start():
+		for thread in threads:
+			thread.start()
 
 	@staticmethod
 	def toggleDebug():
 		Pagerunner.debug = not Pagerunner.debug
 
+	@staticmethod
+	def createThreads(newThreadCount):
+		for i in range(newThreadCount):
+			name = 'Thread ' + i
+			t = threading.Thread(target=Pagerunner.work())
+			t.daemon = True
+			Pagerunner.threads.append(t)
 
 	@staticmethod
 	def addDomains(newDomains):

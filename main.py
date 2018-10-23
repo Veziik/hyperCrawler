@@ -2,7 +2,6 @@
 # coding: utf-8
 from urllib.request import urlopen
 from urllib.request import Request
-import threading
 import sys
 from queue import Queue
 from domain import *
@@ -22,32 +21,23 @@ def parse():
 
 	arguments['website'] = sys.argv[1]
 	arguments['debug'] = False
+	arguments['threads'] = 1
 
 	if len(sys.argv )>2 :	
-		for arg in sys.argv:
-			if arg == '-d':
+		for i in range(len(sys.argv)):
+			if sys.argv[i] == '-d':
 				arguments['debug'] = True
+			elif sys.argv[i] == '-t':
+				arguments['threads'] = sys.argv[i+1]
 
 	return arguments
 
 
 def main():
 	arguments = parse()
-	Pagerunner(newStartAddress=arguments['website'], newDomains=get_domain_name(arguments['website']), newTabooWords=None, newDebugOn=arguments['debug'] )
-	threadList = []
-	i = 0
-	
-	while i < 4:
-		name = 'thread ' + str(i)
-		t = threading.Thread(target = Pagerunner.work(name))
-		threadList.append(t)
-		t.daemon = True
-
-		if arguments['debug']:
-			print(name + ' created')
-		i+=1
-
-		t.start()
+	print(type(arguments['threads']))
+	Pagerunner(newStartAddress=arguments['website'], newDomains=get_domain_name(arguments['website']), newTabooWords=None, newDebugOn=arguments['debug'], threads=arguments['threads'] )
+	Pagerunner.start()
 	
 	
 
