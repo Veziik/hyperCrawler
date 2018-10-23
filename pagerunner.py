@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from urllib.error import URLError
 from link_finder import LinkFinder
 from threading import RLock, current_thread
-from time import gmtime, strftime
+from time import gmtime, strftime, sleep
 import threading
 from domain import *
 import queue
@@ -35,18 +35,18 @@ class Pagerunner:
 			Pagerunner.tabooWords.add(newTabooWords)
 		if newDebugOn:
 			Pagerunner.debugOn = newDebugOn
-		createThreads(newThreadCount)
+		Pagerunner.createThreads(newThreadCount)
 
 		
 	@staticmethod
 	def work(threadName):
-		while not Pagerunner.queueEmpty():
-			Pagerunner.crawlPage(threadName, Pagerunner.nextLink())
+		Pagerunner.crawlPage(threadName, Pagerunner.nextLink())
 
 	@staticmethod
 	def start():
-		for thread in threads:
-			thread.start()
+		for thread in Pagerunner.threads:
+			print('starting ' + thread.name)
+			
 
 	@staticmethod
 	def toggleDebug():
@@ -54,11 +54,14 @@ class Pagerunner:
 
 	@staticmethod
 	def createThreads(newThreadCount):
+
 		for i in range(newThreadCount):
-			name = 'Thread ' + i
-			t = threading.Thread(target=Pagerunner.work())
+			name = 'Thread ' + str(i)
+			print('creating ' + name)
+			t = threading.Thread(target=Pagerunner.work(name))
 			t.daemon = True
 			Pagerunner.threads.append(t)
+			t.start()
 
 	@staticmethod
 	def addDomains(newDomains):
@@ -94,22 +97,24 @@ class Pagerunner:
 	@staticmethod
 	def nextLink():
 		nextLink = None
+		counter = 1
 		with Pagerunner.notvisitedLock:
-			nextLink =Pagerunner.notvisited.get()
-		if nextLink:
-			return nextLink
-		else :
-			if debugOn:
+			while Pagerunner.notvisited.empty and counter <  5:
+				sleep(1)
+				counter +=1
+			if counter >= 5:
 				print('no more links, exiting')
-			exit(0)
+				exit(0)
+			nextLink =Pagerunner.notvisited.get_nowait()
+		return nextLink
 
 
 	@staticmethod		
 	def crawlPage(threadName, pageUrl):
 		forbidden = True
 
-		for domain in Pagerunner.domains:
-			forbidden = forbidden and (domain not in pageUrl)
+		#for domain in Pagerunner.domains:
+		#	forbidden = forbidden and (domain not in pageUrl)
 
 		for taboo in Pagerunner.tabooWords:
 			forbidden = forbidden or (taboo in pageUrl)

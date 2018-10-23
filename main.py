@@ -28,15 +28,14 @@ def parse():
 			if sys.argv[i] == '-d':
 				arguments['debug'] = True
 			elif sys.argv[i] == '-t':
-				arguments['threads'] = sys.argv[i+1]
+				arguments['threads'] = int(sys.argv[i+1])
 
 	return arguments
 
 
 def main():
 	arguments = parse()
-	print(type(arguments['threads']))
-	Pagerunner(newStartAddress=arguments['website'], newDomains=get_domain_name(arguments['website']), newTabooWords=None, newDebugOn=arguments['debug'], threads=arguments['threads'] )
+	Pagerunner(newStartAddress=arguments['website'], newDomains=get_domain_name(arguments['website']), newTabooWords=None, newDebugOn=arguments['debug'], newThreadCount=arguments['threads'] )
 	Pagerunner.start()
 	
 	
