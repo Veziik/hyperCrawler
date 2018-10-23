@@ -3,7 +3,6 @@ from urllib.request import Request
 from urllib.parse import urlparse
 from urllib.error import URLError
 from link_finder import LinkFinder
-from general import * 
 from threading import RLock, current_thread
 from time import gmtime, strftime
 from domain import *

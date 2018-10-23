@@ -21,14 +21,12 @@ def parse():
 		exit(0)
 
 	arguments['website'] = sys.argv[1]
-
+	arguments['debug'] = False
 
 	if len(sys.argv )>2 :	
 		for arg in sys.argv:
 			if arg == '-d':
 				arguments['debug'] = True
-			else:
-				arguments['debug'] = False
 
 	return arguments
 
@@ -48,9 +46,10 @@ def main():
 		if arguments['debug']:
 			print(name + ' created')
 		i+=1
+
+		t.start()
 	
-	#for thread in threadList:
-	#	thread.start
+	
 
 
 
