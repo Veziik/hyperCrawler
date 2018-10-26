@@ -18,35 +18,44 @@ class Pagerunner:
 	visitedLock = RLock()		#Threading Lock for adding to the visited list
 	notvisitedLock = RLock()	#Threading Lock for adding to the queue
 	tabooWords = set()			#Keywords that ban links from being searched by the runner
-	debugOn = False				#Enables/Disables debug text #Next Line is the headers the runner uses when sending a request
-	function = None	
-	threads = []
+	debugOn = False				#Enables/Disables debug text 
+	function = None				#function that the Pagerunner uses on each page 
+	threads = []				#List of the threads in use #Next Line is the headers the runner uses when sending a request
 	headers = {'Connection' : 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',}
 
 	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=None, newDebugOn=None, newThreadCount = 1):
-		if newStartAddress and Pagerunner.notvisited.empty():
+		if not Pagerunner.startAddress:
 			Pagerunner.startAddress = newStartAddress
-			Pagerunner.addLink(newStartAddress)
-		elif newStartAddress and not queue.empty():
-			Pagerunner.addLink(newStartAddress)
+		
+		Pagerunner.addLink(newStartAddress)
+		
 		if newDomains:
 			Pagerunner.domains.add(newDomains) 
+		
 		if newTabooWords:
 			Pagerunner.tabooWords.add(newTabooWords)
+		
 		if newDebugOn:
 			Pagerunner.debugOn = newDebugOn
+		
+		Pagerunner.crawlPage('Main Thread', Pagerunner.nextLink())
+
 		Pagerunner.createThreads(newThreadCount)
+		Pagerunner.start()
+		
+
 
 		
 	@staticmethod
 	def work(threadName):
-		Pagerunner.crawlPage(threadName, Pagerunner.nextLink())
+		while True:
+			Pagerunner.crawlPage(threadName, Pagerunner.nextLink())
 
 	@staticmethod
 	def start():
 		for thread in Pagerunner.threads:
 			print('starting ' + thread.name)
-			
+			thread.run()
 
 	@staticmethod
 	def toggleDebug():
@@ -54,14 +63,17 @@ class Pagerunner:
 
 	@staticmethod
 	def createThreads(newThreadCount):
-
-		for i in range(newThreadCount):
+		print('ThreadCount: ' + str(newThreadCount))
+		i = 0
+		while i < newThreadCount:
 			name = 'Thread ' + str(i)
+			print('i: ' + str(i))
 			print('creating ' + name)
 			t = threading.Thread(target=Pagerunner.work(name))
 			t.daemon = True
 			Pagerunner.threads.append(t)
-			t.start()
+			i = i+ 1
+			
 
 	@staticmethod
 	def addDomains(newDomains):
@@ -99,12 +111,6 @@ class Pagerunner:
 		nextLink = None
 		counter = 1
 		with Pagerunner.notvisitedLock:
-			while Pagerunner.notvisited.empty and counter <  5:
-				sleep(1)
-				counter +=1
-			if counter >= 5:
-				print('no more links, exiting')
-				exit(0)
 			nextLink =Pagerunner.notvisited.get_nowait()
 		return nextLink
 
@@ -113,8 +119,8 @@ class Pagerunner:
 	def crawlPage(threadName, pageUrl):
 		forbidden = True
 
-		#for domain in Pagerunner.domains:
-		#	forbidden = forbidden and (domain not in pageUrl)
+		if get_domain_name(pageUrl) in Pagerunner.domains:
+			forbidden = False
 
 		for taboo in Pagerunner.tabooWords:
 			forbidden = forbidden or (taboo in pageUrl)
@@ -142,7 +148,7 @@ class Pagerunner:
 				finder.feed(htmlText)
 				foundlinks = finder.page_links() 
 				returnlinks = foundlinks
-
+				#print(returnlinks)
 			Pagerunner.useFunctionOnEachPage(response)
 
 			response.close()
