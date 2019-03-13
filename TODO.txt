@@ -1,1 +1,3 @@
 Replace domai scraper.py with more robust main.py
+
+	implement a timeout so that other threads have a chance to pick up links
