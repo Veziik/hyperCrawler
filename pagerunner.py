@@ -31,7 +31,7 @@ class Pagerunner:
 		if Pagerunner.debugOn or Pagerunner.verboseOn:
 			print(threading.current_thread().name + ' doing nothing with the given page')
 
-	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=[], newDebugOn=False, newVerboseOn = False,  newThreadCount = 1, newFunction=doNothing ):
+	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=None, newDebugOn=False, newVerboseOn = False,  newThreadCount = 1, newFunction=doNothing ):
 		if not Pagerunner.startAddress:
 			Pagerunner.startAddress = newStartAddress
 		
@@ -42,7 +42,8 @@ class Pagerunner:
 				Pagerunner.domains.add(domain) 
 		
 		if newTabooWords:
-			Pagerunner.tabooWords.add(newTabooWords)
+			for taboo in newTabooWords:
+				Pagerunner.tabooWords.add(taboo)
 		
 		if newDebugOn:
 			Pagerunner.debugOn = newDebugOn
@@ -186,6 +187,8 @@ class Pagerunner:
 	visited: ''' + str(Pagerunner.visited) + ''' 
 					
 	domains: ''' + str(Pagerunner.domains) + '''
+
+	taboos: ''' + str(Pagerunner.tabooWords) + '''
 					
 	notVisited: ''' + str(Pagerunner.notvisited.qsize()) + '''
 
@@ -228,9 +231,12 @@ class Pagerunner:
 
 			Pagerunner.visited.add(pageUrl)
 		
-		except URLError:
-			print('error encountered, most likely a 404\n')
-			return set()			
+		except URLError as e:
+			print(e)
+			return set()
+		finally:
+			Pagerunner.visited.add(pageUrl)
+
 		return returnlinks 
 
 	
