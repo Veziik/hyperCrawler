@@ -31,7 +31,8 @@ class Pagerunner:
 		Pagerunner.addLink(newStartAddress)
 		
 		if newDomains:
-			Pagerunner.domains.add(newDomains) 
+			for domain in newDomains:
+				Pagerunner.domains.add(domain) 
 		
 		if newTabooWords:
 			Pagerunner.tabooWords.add(newTabooWords)
@@ -42,27 +43,45 @@ class Pagerunner:
 		if newVerboseOn:
 			Pagerunner.verboseOn = newVerboseOn
 		
-		if Pagerunner.debugOn:	print('creating main thread')
+
+		if Pagerunner.debugOn:
+				print('''Data structure Status on init:
+	visited: ''' + str(Pagerunner.visited) + ''' 
+					
+	domains: ''' + str(Pagerunner.domains) + '''
+					
+	notVisited: ''' + str(Pagerunner.notvisited.qsize()) + '''
+
+	threads: ''' + str(Pagerunner.threads) )
+
+
+		if Pagerunner.debugOn:	
+			print('starting init process')
 		Pagerunner.crawlPage(Pagerunner.nextLink())
 
-		if Pagerunner.debugOn:	print('creating child threads')
-		Pagerunner.createThreads(newThreadCount)
 
-		if Pagerunner.debugOn:	print('starting child threads')
-		Pagerunner.start()
+
+		if Pagerunner.debugOn:	
+			print('creating child threads')
+		Pagerunner.createThreads(newThreadCount)
+		
+
+		if Pagerunner.debugOn:	
+			print('starting child threads')
+		Pagerunner.startThreads()
 		
 		
 	@staticmethod
 	def work():
-		while True:
+		while not Pagerunner.queueEmpty():
 			Pagerunner.crawlPage(Pagerunner.nextLink())
 
 	@staticmethod
-	def start():
+	def startThreads():
 		for thread in Pagerunner.threads:
-			if Pagerunner.debugOn:	print('starting ' + thread.name)
-			
-			thread.run()
+			if Pagerunner.debugOn or Pagerunner.verboseOn:	
+				print('starting ' + thread.name)
+			thread.start()
 
 	@staticmethod
 	def toggleDebug():
@@ -70,18 +89,22 @@ class Pagerunner:
 
 	@staticmethod
 	def createThreads(newThreadCount):
-		print('ThreadCount: ' + str(newThreadCount))
+		if Pagerunner.debugOn:
+			print('Thread count: ' + str(newThreadCount) + '+1 function thread')
 		i = 0
 		while i < newThreadCount:
-			name = 'Thread ' + str(i)
-			print('i: ' + str(i))
-			print('creating ' + name)
+			name = 'Crawler ' + str(i)
+			#print('i: ' + str(i))
+			if Pagerunner.debugOn or Pagerunner.verboseOn:
+				print('creating ' + name)
 			t = threading.Thread(target=Pagerunner.work)
 			t.name = name
-			t.daemon = True
+			#t.daemon = True
 			Pagerunner.threads.add(t)
 			i+=1
-			
+
+		if Pagerunner.debugOn or Pagerunner.verboseOn:
+				print('creating Function Thread')
 
 	@staticmethod
 	def addDomains(newDomains):
@@ -111,8 +134,8 @@ class Pagerunner:
 	@staticmethod
 	def addLinks(newLinks):
 		with Pagerunner.notvisitedLock:
-			for  link in newLinks:
-				Pagerunner.addLink(link)
+			for  newLink in newLinks:
+				Pagerunner.notvisited.put(newLink)
 
 	@staticmethod
 	def nextLink():
@@ -124,18 +147,10 @@ class Pagerunner:
 
 	@staticmethod		
 	def crawlPage(pageUrl):
-		forbidden = True 
-
-		if get_domain_name(pageUrl) in Pagerunner.domains:
-			forbidden = False
-
-		for taboo in Pagerunner.tabooWords:
-			forbidden = forbidden or (taboo in pageUrl)
-
-		if pageUrl not in Pagerunner.visited and not forbidden:
-			if Pagerunner.debugOn or Pagerunner.verboseOn:
+		if Pagerunner.debugOn or Pagerunner.verboseOn:
 				print(threading.current_thread().name + ' crawling ' + pageUrl )
-			if Pagerunner.debugOn:
+
+		if Pagerunner.debugOn:
 				print('''Data structure Status:
 	visited: ''' + str(Pagerunner.visited) + ''' 
 					
@@ -144,6 +159,16 @@ class Pagerunner:
 	notVisited: ''' + str(Pagerunner.notvisited.qsize()) + '''
 
 	threads: ''' + str(Pagerunner.threads) )
+
+
+		forbidden = True 
+		if get_domain_name(pageUrl) in Pagerunner.domains:
+			forbidden = False
+
+		for taboo in Pagerunner.tabooWords:
+			forbidden = forbidden or (taboo in pageUrl)
+
+		if pageUrl not in Pagerunner.visited and not forbidden:			
 			Pagerunner.addLinks(Pagerunner.gatherLinks(pageUrl))
 
 

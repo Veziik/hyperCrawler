@@ -13,6 +13,12 @@ def usage():
 	return '''usage:
 	./main <website>'''
 
+def checkFormat(url):
+	if ('http://' not in url[0:7]) and ('https://' not in url[0:8]):
+		url = 'https://' + url 
+
+	return url
+
 def parse():
 	arguments = dict()
 
@@ -20,7 +26,7 @@ def parse():
 		print(usage())
 		exit(0)
 
-	arguments['website'] = sys.argv[1]
+	arguments['website'] = checkFormat(sys.argv[1])
 	arguments['debug'] = False
 	arguments['verbose'] = False
 	arguments['threads'] = os.cpu_count()
@@ -40,9 +46,9 @@ def parse():
 def main():	
 	arguments = parse()
 	if arguments['debug']: 
-		print('website :'  + arguments['website'])
-	Pagerunner(newStartAddress=arguments['website'], newDomains=get_domain_name(arguments['website']), newTabooWords=None, newDebugOn=arguments['debug'], newVerboseOn=arguments['verbose'], newThreadCount=arguments['threads'] )
-	Pagerunner.start()
+		print('website : '  + arguments['website'])
+	Pagerunner(newStartAddress=arguments['website'], newDomains={get_domain_name(arguments['website'])}, newTabooWords=None, newDebugOn=arguments['debug'], newVerboseOn=arguments['verbose'], newThreadCount=arguments['threads'] )
+	#Pagerunner.startThreads()
 	
 	
 
