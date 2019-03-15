@@ -11,10 +11,13 @@ import queue
 class Pagerunner:
 
 	startAddress = ''					#The starting Address for the search
+	processed = set()					#domains that the function thread has processed
 	domains = set()	#	#	#	#	#	#Domains that the runner is allowed to traverse
 	visited = set()						#Addresses tnat the runner has visited
 	notvisited = queue.Queue()	#	#	#Adressses that the runner has not yet visited
-	visitedLock = threading.RLock()		#Threading Lock for adding to the visited list
+	responses = queue.Queue()			#responses that have yet to be processed
+	responseLock = threading.RLock()	#	#Threading Lock for adding to the responses queue
+	visitedLock = threading.RLock()	#	#Threading Lock for adding to the visited list
 	notvisitedLock = threading.RLock()	#Threading Lock for adding to the queue
 	tabooWords = set()					#Keywords that ban links from being searched by the runner
 	debugOn = False		#	#	#	#	#Enables/Disables debug text 
@@ -24,7 +27,11 @@ class Pagerunner:
 										#Next Line is the headers the runner uses when sending a request
 	headers = {'Connection' : 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',}
 
-	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=[], newDebugOn=False, newVerboseOn = False,  newThreadCount = 1):
+	def doNothing(pageUrl,response):
+		if Pagerunner.debugOn or Pagerunner.verboseOn:
+			print(threading.current_thread().name + ' doing nothing with the given page')
+
+	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=[], newDebugOn=False, newVerboseOn = False,  newThreadCount = 1, newFunction=doNothing ):
 		if not Pagerunner.startAddress:
 			Pagerunner.startAddress = newStartAddress
 		
@@ -42,7 +49,10 @@ class Pagerunner:
 
 		if newVerboseOn:
 			Pagerunner.verboseOn = newVerboseOn
-		
+		if newFunction:
+			Pagerunner.function = newFunction
+		else:
+			Pagerunner.function = doNothing
 
 		if Pagerunner.debugOn:
 				print('''Data structure Status on init:
@@ -70,7 +80,7 @@ class Pagerunner:
 			print('starting child threads')
 		Pagerunner.startThreads()
 		
-		
+
 	@staticmethod
 	def work():
 		while not Pagerunner.queueEmpty():
@@ -90,7 +100,7 @@ class Pagerunner:
 	@staticmethod
 	def createThreads(newThreadCount):
 		if Pagerunner.debugOn:
-			print('Thread count: ' + str(newThreadCount) + '+1 function thread')
+			print('Thread count: ' + str(newThreadCount) + ' +1 function thread')
 		i = 0
 		while i < newThreadCount:
 			name = 'Crawler ' + str(i)
@@ -104,7 +114,11 @@ class Pagerunner:
 			i+=1
 
 		if Pagerunner.debugOn or Pagerunner.verboseOn:
-				print('creating Function Thread')
+			print('creating Function Thread')
+		
+		t = threading.Thread(target=Pagerunner.useFunctionOnEachPage)
+		t.name = 'Function Thread'
+		Pagerunner.threads.add(t)
 
 	@staticmethod
 	def addDomains(newDomains):
@@ -124,7 +138,13 @@ class Pagerunner:
 
 	@staticmethod
 	def queueEmpty():
-		return Pagerunner.notvisited.empty()
+		with Pagerunner.notvisitedLock:
+			return Pagerunner.notvisited.empty()
+	
+	@staticmethod
+	def responsesEmpty():
+		with Pagerunner.responseLock:
+			return Pagerunner.responses.empty()
 
 	@staticmethod
 	def addLink(newLink):
@@ -136,6 +156,17 @@ class Pagerunner:
 		with Pagerunner.notvisitedLock:
 			for  newLink in newLinks:
 				Pagerunner.notvisited.put(newLink)
+	
+	@staticmethod
+	def pageVisited(pageUrl):	
+		with Pagerunner.visitedLock:
+			return pageUrl in Pagerunner.visited
+		
+
+	@staticmethod
+	def addResponse(response):
+		with Pagerunner.responseLock:
+			Pagerunner.responses.put(response)
 
 	@staticmethod
 	def nextLink():
@@ -168,7 +199,7 @@ class Pagerunner:
 		for taboo in Pagerunner.tabooWords:
 			forbidden = forbidden or (taboo in pageUrl)
 
-		if pageUrl not in Pagerunner.visited and not forbidden:			
+		if  (not Pagerunner.pageVisited(pageUrl)) and (not forbidden):			
 			Pagerunner.addLinks(Pagerunner.gatherLinks(pageUrl))
 
 
@@ -181,7 +212,8 @@ class Pagerunner:
 			response = urlopen(request)
 			returnheader = response.getheader('Content-Type')	
 			htmlBytes = response.read()
-			
+			Pagerunner.addResponse((pageUrl, response))
+
 			if 'text/html' in returnheader:
 			
 				htmlText = htmlBytes.decode("utf-8")
@@ -190,9 +222,10 @@ class Pagerunner:
 				foundlinks = finder.page_links() 
 				returnlinks = foundlinks
 				#print(returnlinks)
-			Pagerunner.useFunctionOnEachPage(response)
+			
 
 			response.close()
+
 			Pagerunner.visited.add(pageUrl)
 		
 		except URLError:
@@ -203,6 +236,16 @@ class Pagerunner:
 	
 
 	@staticmethod
-	def useFunctionOnEachPage(response):
-			pass
+	def useFunctionOnEachPage():
+		while not Pagerunner.queueEmpty() or not Pagerunner.responsesEmpty():
+
+			if not Pagerunner.responsesEmpty():
+				
+				if Pagerunner.debugOn:
+					print('Function Thread executing')
+			
+				(pageUrl, response) = Pagerunner.responses.get(False)
+				if pageUrl not in Pagerunner.processed:
+					Pagerunner.function(pageUrl,response)
+					Pagerunner.processed.add(pageUrl)
 		

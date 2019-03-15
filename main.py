@@ -7,6 +7,7 @@ import os
 from queue import Queue
 from domain import *
 from pagerunner import Pagerunner
+import importlib
 
 
 def usage():
@@ -19,6 +20,13 @@ def checkFormat(url):
 
 	return url
 
+def handleImport(fileName):
+	i = importlib.import_module(fileName.replace('.py',''))
+	return i.target
+
+def printPageNames(pageUrl, response):
+	print(pageUrl)
+
 def parse():
 	arguments = dict()
 
@@ -30,6 +38,7 @@ def parse():
 	arguments['debug'] = False
 	arguments['verbose'] = False
 	arguments['threads'] = os.cpu_count()
+	arguments['function'] = printPageNames
 
 	if len(sys.argv )>2 :	
 		for i in range(len(sys.argv)):
@@ -39,6 +48,8 @@ def parse():
 				arguments['threads'] = int(sys.argv[i+1])
 			elif sys.argv[i] == '-v':
 				arguments['verbose'] = True
+			elif sys.argv[i] == '-f':
+				arguments['function'] = handleImport(sys.argv[i+1])
 
 	return arguments
 
@@ -47,7 +58,7 @@ def main():
 	arguments = parse()
 	if arguments['debug']: 
 		print('website : '  + arguments['website'])
-	Pagerunner(newStartAddress=arguments['website'], newDomains={get_domain_name(arguments['website'])}, newTabooWords=None, newDebugOn=arguments['debug'], newVerboseOn=arguments['verbose'], newThreadCount=arguments['threads'] )
+	Pagerunner(newStartAddress=arguments['website'], newDomains={get_domain_name(arguments['website'])}, newTabooWords=None, newDebugOn=arguments['debug'], newVerboseOn=arguments['verbose'], newThreadCount=arguments['threads'],newFunction=arguments['function'])
 	#Pagerunner.startThreads()
 	
 	
