@@ -1,4 +1,6 @@
 from urllib.parse import urlparse
+### All of this code was given to me by thenewboston 
+### as a part of his videoseries on how to make a web crawler
 
 def get_domain_name(url):
 	try:

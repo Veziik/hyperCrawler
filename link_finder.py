@@ -1,6 +1,8 @@
 from html.parser import HTMLParser
 from urllib import parse 
 
+### All of this code was given to me by thenewboston 
+### as a part of his videoseries on how to make a web crawler
 class LinkFinder(HTMLParser):
 
 	def __init__(self, base_url, page_url):
