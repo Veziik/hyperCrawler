@@ -13,7 +13,7 @@ import importlib
 def usage():
 	return '''
 
-usage: main.py <URL>
+usage: ''' + sys.argv[0] +''' <URL>
 
 Options
 	-v: 					verbose output, prints more to the screen while it works
