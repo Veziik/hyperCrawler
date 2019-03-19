@@ -245,13 +245,23 @@ class Pagerunner:
 		
 		except URLError as e:
 			print(e)
-			return set()
+			returnlints =  set()
 		except UnicodeDecodeError as e:
 			print(e)
-			return set()
+			returnlints =  set()
 		except UnicodeEncodeError as e:
 			print(e)
-			return set()
+			returnlints =  set()
+		except ConnectionResetError as e:
+			print(e)
+			returnlints =  set()
+		except ConnectionResetError as e:
+			print(e)
+			returnlints =  set()
+		except IncompleteRead as e:
+			print(e)
+			returnlints =  set()
+
 		finally:
 			Pagerunner.visited.add(pageUrl)
 
