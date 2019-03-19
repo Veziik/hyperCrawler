@@ -9,11 +9,12 @@ from domain import *
 import queue
 
 
-class DonNothing(object):
-	"""docstring for DonNothing"""
+class DoNothing(object):
 	
-	@staticmethod
-	def doNothing(pageUrl,response):
+	def __init__(self):
+		pass
+	
+	def pipe(self, pageUrl,response):
 		if Pagerunner.debugOn or Pagerunner.verboseOn:
 			print(threading.current_thread().name + ' doing nothing with the given page')
 		
@@ -61,7 +62,7 @@ class Pagerunner:
 		if newVerboseOn:
 			Pagerunner.verboseOn = newVerboseOn
 		
-		if newFunction:
+		if newModule:
 			Pagerunner.module = newModule
 		else:
 			Pagerunner.module = DoNothing.doNothing
@@ -230,7 +231,7 @@ class Pagerunner:
 
 			if 'text/html' in returnheader:
 			
-				htmlText = htmlBytes.decode("utf-8")
+				htmlText = htmlBytes.decode('utf-8')
 				finder = LinkFinder(Pagerunner.startAddress, pageUrl)
 				finder.feed(htmlText)
 				foundlinks = finder.page_links() 
@@ -243,6 +244,9 @@ class Pagerunner:
 			Pagerunner.visited.add(pageUrl)
 		
 		except URLError as e:
+			print(e)
+			return set()
+		except UnicodeDecodeError as e:
 			print(e)
 			return set()
 		finally:
@@ -263,6 +267,6 @@ class Pagerunner:
 			
 				(pageUrl, response) = Pagerunner.responses.get(False)
 				if pageUrl not in Pagerunner.processed:
-					Pagerunner.module.pipe(pageUrl,response)
+					Pagerunner.module.pipe(Pagerunner.module, pageUrl,response)
 					Pagerunner.processed.add(pageUrl)
 		
