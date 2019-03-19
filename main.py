@@ -18,7 +18,7 @@ class PrintPages(object):
 	def __init__(self):
 		pass
 
-	def pipe(self, pageUrl, response):
+	def pipe(self, pageUrl, response, isLastRun):
 		print(str(len(Pagerunner.visited)) + ': ' + pageUrl)	
 
 
@@ -31,7 +31,7 @@ usage: ''' + sys.argv[0] +''' <URL>
 Options
 	-v: verbose output, prints more to the screen while it works
 	
-	-m <filename>: module to use, cli implementation requires a class named webpagehandler and the function pipe(self,url,response)
+	-m <filename>: module to use, cli implementation requires a class named webpagehandler and the function pipe(self,url,response,isLastRun)
 	
 	-d <domain 1> ... : adds listed domains to the set of authorized domains
 	
@@ -75,7 +75,7 @@ def parse():
 	arguments['debug'] = False
 	arguments['verbose'] = False
 	arguments['threads'] = os.cpu_count()
-	arguments['module'] = PrintPages
+	arguments['module'] = PrintPages()
 	arguments['taboos'] = set()
 	arguments['domains'] = set()
 	
@@ -89,7 +89,7 @@ def parse():
 			elif sys.argv[i].lower() == '-v':
 				arguments['verbose'] = True
 			elif sys.argv[i].lower() == '-m':
-				argument['module']= handleImport(sys.argv[i+1])
+				arguments['module']= handleImport(sys.argv[i+1])
 			elif sys.argv[i].lower() == '-t': 
 				arguments['taboos'] = parseToSet(i, len(sys.argv))
 			elif sys.argv[i].lower() == '-d': 

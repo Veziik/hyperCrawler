@@ -14,7 +14,7 @@ class DoNothing(object):
 	def __init__(self):
 		pass
 	
-	def pipe(self, pageUrl,response):
+	def pipe(self, pageUrl,response, isLastRun):
 		if Pagerunner.debugOn or Pagerunner.verboseOn:
 			print(threading.current_thread().name + ' doing nothing with the given page')
 		
@@ -42,7 +42,7 @@ class Pagerunner:
 	headers = {'Connection' : 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',}
 
 
-	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=None, newDebugOn=False, newVerboseOn = False,  newThreadCount = 1, newModule=DoNothing ):
+	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=None, newDebugOn=False, newVerboseOn = False,  newThreadCount = 1, newModule=DoNothing() ):
 		if not Pagerunner.startAddress:
 			Pagerunner.startAddress = newStartAddress
 		
@@ -96,7 +96,7 @@ class Pagerunner:
 
 	@staticmethod
 	def work():
-		while not Pagerunner.queueEmpty():
+		while not Pagerunner.notVisitedIsEmpty():
 			Pagerunner.crawlPage(Pagerunner.nextLink())
 
 	@staticmethod
@@ -129,7 +129,7 @@ class Pagerunner:
 		if Pagerunner.debugOn or Pagerunner.verboseOn:
 			print('creating Function Thread')
 		
-		t = threading.Thread(target=Pagerunner.useFunctionOnEachPage)
+		t = threading.Thread(target=Pagerunner.functionThreadWork)
 		t.name = 'Function Thread'
 		Pagerunner.threads.add(t)
 
@@ -150,12 +150,12 @@ class Pagerunner:
 		Pagerunner.tabooWords.remove(oldTaboowords)
 
 	@staticmethod
-	def queueEmpty():
+	def notVisitedIsEmpty():
 		with Pagerunner.notvisitedLock:
 			return Pagerunner.notvisited.empty()
 	
 	@staticmethod
-	def responsesEmpty():
+	def responsesIsEmpty():
 		with Pagerunner.responseLock:
 			return Pagerunner.responses.empty()
 
@@ -257,16 +257,20 @@ class Pagerunner:
 	
 
 	@staticmethod
-	def useFunctionOnEachPage():
-		while not Pagerunner.queueEmpty() or not Pagerunner.responsesEmpty():
+	def functionThreadWork():
+		while (not Pagerunner.notVisitedIsEmpty()) or (not Pagerunner.responsesIsEmpty()):
 
-			if not Pagerunner.responsesEmpty():
+			if not Pagerunner.responsesIsEmpty():
 				
 				if Pagerunner.debugOn:
 					print('Function Thread executing')
 			
 				(pageUrl, response) = Pagerunner.responses.get(False)
 				if pageUrl not in Pagerunner.processed:
-					Pagerunner.module.pipe(Pagerunner.module, pageUrl,response)
+					Pagerunner.module.pipe( pageUrl,response,isLastRun=False)
 					Pagerunner.processed.add(pageUrl)
 		
+		
+
+
+		Pagerunner.module.pipe( None,None,isLastRun=True)
