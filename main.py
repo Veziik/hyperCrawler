@@ -71,7 +71,7 @@ def parse():
 		print(usage())
 		exit(0)
 
-	arguments['website'] = checkFormat(sys.argv[1])
+	arguments['website'] = checkFormat(sys.argv[1]).lower()
 	arguments['debug'] = False
 	arguments['verbose'] = False
 	arguments['threads'] = os.cpu_count()
