@@ -3,3 +3,6 @@ log.txt
 verboseLog.txt
 debugLog.txt
 TODO.txt
+saves/
+reports/
+scripts/
