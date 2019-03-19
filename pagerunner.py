@@ -249,7 +249,7 @@ class Pagerunner:
 		except UnicodeDecodeError as e:
 			print(e)
 			return set()
-		except UnicodeDecodeError as e:
+		except UnicodeEncodeError as e:
 			print(e)
 			return set()
 		finally:
