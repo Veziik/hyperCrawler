@@ -74,7 +74,7 @@ def parse():
 	arguments['website'] = checkFormat(sys.argv[1]).lower()
 	arguments['debug'] = False
 	arguments['verbose'] = False
-	arguments['threads'] = os.cpu_count()
+	arguments['threads'] = os.cpu_count() * 10
 	arguments['module'] = PrintPages()
 	arguments['taboos'] = set()
 	arguments['domains'] = set()
