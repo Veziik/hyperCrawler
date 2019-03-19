@@ -8,6 +8,19 @@ import threading
 from domain import *
 import queue
 
+
+class DonNothing(object):
+	"""docstring for DonNothing"""
+	
+	@staticmethod
+	def doNothing(pageUrl,response):
+		if Pagerunner.debugOn or Pagerunner.verboseOn:
+			print(threading.current_thread().name + ' doing nothing with the given page')
+		
+
+
+
+
 class Pagerunner:
 
 	startAddress = ''					#The starting Address for the search
@@ -22,16 +35,13 @@ class Pagerunner:
 	tabooWords = set()					#Keywords that ban links from being searched by the runner
 	debugOn = False		#	#	#	#	#Enables/Disables debug text 
 	verboseOn = False					#Enables/Disables verbose text (less detailed than debug text)
-	function = None		#	#	#	#	#function that the Pagerunner uses on each page 
+	module = None		#	#	#	#	#class which the pagerunner uses to perform actions on each page 
 	threads = set()						#List of the threads in use 
 										#Next Line is the headers the runner uses when sending a request
 	headers = {'Connection' : 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',}
 
-	def doNothing(pageUrl,response):
-		if Pagerunner.debugOn or Pagerunner.verboseOn:
-			print(threading.current_thread().name + ' doing nothing with the given page')
 
-	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=None, newDebugOn=False, newVerboseOn = False,  newThreadCount = 1, newFunction=doNothing ):
+	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=None, newDebugOn=False, newVerboseOn = False,  newThreadCount = 1, newModule=DoNothing ):
 		if not Pagerunner.startAddress:
 			Pagerunner.startAddress = newStartAddress
 		
@@ -50,10 +60,11 @@ class Pagerunner:
 
 		if newVerboseOn:
 			Pagerunner.verboseOn = newVerboseOn
+		
 		if newFunction:
-			Pagerunner.function = newFunction
+			Pagerunner.module = newModule
 		else:
-			Pagerunner.function = doNothing
+			Pagerunner.module = DoNothing.doNothing
 
 		if Pagerunner.debugOn:
 				print('''Data structure Status on init:
@@ -252,6 +263,6 @@ class Pagerunner:
 			
 				(pageUrl, response) = Pagerunner.responses.get(False)
 				if pageUrl not in Pagerunner.processed:
-					Pagerunner.function(pageUrl,response)
+					Pagerunner.module.pipe(pageUrl,response)
 					Pagerunner.processed.add(pageUrl)
 		
