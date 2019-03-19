@@ -22,7 +22,7 @@ class WebpageHandler(object):
 
 
 		else:
-			filename='reports/'+ 'test.txt'
+			filename='reports/'+get_domain_name(Pagerunner.startAddress).replace('.' , '[dot]') +'.txt'
 
 			with open(filename, 'w') as file:
 				for ( key, value ) in WebpageHandler.pagetypes.items():
