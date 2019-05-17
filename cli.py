@@ -11,17 +11,6 @@ import importlib
 
 
 
-class PrintPages(object):
-	
-	globalVar = 'hello'
-
-	def __init__(self):
-		pass
-
-	def pipe(self, pageUrl, response, isLastRun):
-		print(str(len(Pagerunner.visited)) + ': ' + pageUrl)	
-
-
 
 def usage():
 	return '''
@@ -37,6 +26,8 @@ Options
 	
 	-t <taboo 1> ... : adds listed taboos to the set of keywords websites may not have in order to be visited
 	
+	-s <interval> : saves every <interval> seconds
+
 	--debug: debug mode, prints the status of all of the data structures in use for the duration of the run in each iteration
 	
 	--threads [int]: manually specify the number of threads to use
@@ -47,10 +38,6 @@ def checkFormat(url):
 		url = 'https://' + url 
 
 	return url
-
-def handleImport(fileName):
-	i = importlib.import_module(fileName.replace('.py',''))
-	return i.WebpageHandler()
 
 def parseToSet(startingIndex, numberOfArguments):
 	i = startingIndex + 1
@@ -75,10 +62,11 @@ def parse():
 	arguments['debug'] = False
 	arguments['verbose'] = False
 	arguments['threads'] = os.cpu_count() * 10
-	arguments['module'] = PrintPages()
+	arguments['modulePath'] = None
 	arguments['taboos'] = set()
 	arguments['domains'] = set()
-	
+	arguments['saveInterval'] = None
+	arguments['loadPath'] = None
 
 	if len(sys.argv )>2 :	
 		for i in range(len(sys.argv)):
@@ -89,7 +77,7 @@ def parse():
 			elif sys.argv[i].lower() == '-v':
 				arguments['verbose'] = True
 			elif sys.argv[i].lower() == '-m':
-				arguments['module']= handleImport(sys.argv[i+1])
+				arguments['modulePath']= sys.argv[i+1]
 			elif sys.argv[i].lower() == '-t': 
 				arguments['taboos'] = parseToSet(i, len(sys.argv))
 			elif sys.argv[i].lower() == '-d': 
@@ -97,6 +85,13 @@ def parse():
 			elif sys.argv[i].lower() == '-h' or sys.argv[i].lower() == '--help':
 				print(usage())
 				exit(0) 
+			elif sys.argv[i].lower() == '-s':
+				if i + 1 < len(sys.argv) and '-' not in sys.argv[i+1]:
+					arguments['saveInterval'] = int(sys.argv[i+1]) 
+				else:
+					arguments['saveInterval'] = 60
+			elif sys.argv[i].lower() == '-l':
+				arguments['loadPath'] = sys.argv[i+1] 
 
 	return arguments
 
@@ -109,7 +104,7 @@ def main():
 		print('taboos: ' + str(arguments['taboos']))
 
 
-	Pagerunner(newStartAddress=arguments['website'], newDomains=arguments['domains'], newTabooWords=arguments['taboos'], newDebugOn=arguments['debug'], newVerboseOn=arguments['verbose'], newThreadCount=arguments['threads'],newModule=arguments['module'])
+	Pagerunner(newStartAddress=arguments['website'], newDomains=arguments['domains'], newTabooWords=arguments['taboos'], newDebugOn=arguments['debug'], newVerboseOn=arguments['verbose'], newThreadCount=arguments['threads'],newModuleFilePath=arguments['modulePath'], newSaveInterval=arguments['saveInterval'], newLoadPath=arguments['loadPath'])
 	#Pagerunner.startThreads()
 	
 	

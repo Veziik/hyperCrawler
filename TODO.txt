@@ -1,5 +1,3 @@
-implement -s <int>: capability for the crawler to periodically save progress, as well as adding the save folder to the .gitignore
-
 implement -l <filename>: capability for the crawler to continue from wherever it left off given a save directory
 
 implement -f <str 1> ... <str n>: capablility for crawler to solely focus on pages with given keywords
