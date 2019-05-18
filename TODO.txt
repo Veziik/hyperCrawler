@@ -1,3 +1,1 @@
-implement -l <filename>: capability for the crawler to continue from wherever it left off given a save directory
-
 implement -f <str 1> ... <str n>: capablility for crawler to solely focus on pages with given keywords
