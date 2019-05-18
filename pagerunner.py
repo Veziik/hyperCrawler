@@ -20,7 +20,7 @@ class DoNothing(object):
 	def pipe(self, pageUrl,response, isLastRun):
 		#if Pagerunner.debugOn or Pagerunner.verboseOn:
 			#print(threading.current_thread().name + ' doing nothing with the given page')
-		print(str(DoNothing.count) + ' : ' + pageUrl)
+		print(str(DoNothing.count) + ' : ' + str(pageUrl))
 		DoNothing.count = DoNothing.count + 1
 
 		
@@ -39,11 +39,11 @@ class Pagerunner:
 	tabooWords = set()					#Keywords that ban links from being searched by the runner
 	responses = queue.Queue()	#	#	#responses that have yet to be processed
 	processed = set()					#domains that the function thread has processed
-	notvisited = queue.Queue()	#	#	#Adressses that the runner has not yet visited
+	notVisited = queue.Queue()	#	#	#Adressses that the runner has not yet visited
 	visited = set()						#Addresses tnat the runner has visited
 	responseLock = threading.RLock()#	#Threading Lock for adding to the responses queue
 	visitedLock = threading.RLock()		#Threading Lock for adding to the visited list
-	notvisitedLock = threading.RLock()	#Threading Lock for adding to the queue
+	notVisitedLock = threading.RLock()	#Threading Lock for adding to the queue
 	saveFolder = 'saves/'				#Save directory for the crawler
 	threads = set()	#	#	#	#	#	#List of the threads in use 
 	timeOfLastSave = None				#Time of the last save function
@@ -54,38 +54,42 @@ class Pagerunner:
 
 
 	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=None, newDebugOn=False, newVerboseOn = False,  newThreadCount = 1, newModuleFilePath=None, newSaveInterval = None, newLoadPath=None ):
-			
-		if not newLoadPath:
-			if not Pagerunner.startAddress:
-				Pagerunner.startAddress = newStartAddress
-			
-			Pagerunner.addLink(newStartAddress)
+		if not Pagerunner.startAddress:
+			Pagerunner.startAddress = newStartAddress
+		
+		Pagerunner.addLink(newStartAddress)
 
-			if newSaveInterval:
-				Pagerunner.saveInterval = newSaveInterval
-				Pagerunner.timeOfLastSave = time.time()
-			
-			if newDomains:
-				for domain in newDomains:
-					Pagerunner.domains.add(domain) 
-			
-			if newTabooWords:
-				for taboo in newTabooWords:
-					Pagerunner.tabooWords.add(taboo)
-			
-			if newDebugOn:
-				Pagerunner.debugOn = newDebugOn
+		if newSaveInterval:
+			Pagerunner.saveInterval = newSaveInterval
+			Pagerunner.timeOfLastSave = time.time()
+		
+		if newDomains:
+			for domain in newDomains:
+				Pagerunner.domains.add(domain) 
+		
+		if newTabooWords:
+			for taboo in newTabooWords:
+				Pagerunner.tabooWords.add(taboo)
+		
+		if newDebugOn:
+			Pagerunner.debugOn = newDebugOn
 
-			if newVerboseOn:
-				Pagerunner.verboseOn = newVerboseOn
-			
-			if newModuleFilePath:
-				Pagerunner.moduleFilePath = newModuleFilePath
-				Pagerunner.module = Pagerunner.handleImport(newModuleFilePath)
-			else:
-				Pagerunner.module = DoNothing()
+		if newVerboseOn:
+			Pagerunner.verboseOn = newVerboseOn
+		
+		if newModuleFilePath:
+			Pagerunner.moduleFilePath = newModuleFilePath
+			Pagerunner.module = Pagerunner.handleImport(newModuleFilePath)
 		else:
+			Pagerunner.module = DoNothing()
+
+		if Pagerunner.debugOn:	
+			print('starting init process')
+
+		if newLoadPath:
 			Pagerunner.load(newLoadPath)
+		else:
+			Pagerunner.crawlPage(Pagerunner.nextLink())
 
 		if Pagerunner.debugOn:
 				print('''Data structure Status on init:
@@ -93,14 +97,12 @@ class Pagerunner:
 					
 	domains: ''' + str(Pagerunner.domains) + '''
 					
-	notVisited: ''' + str(Pagerunner.notvisited.qsize()) + '''
+	notVisited: ''' + str(Pagerunner.notVisited.qsize()) + '''
 
 	threads: ''' + str(Pagerunner.threads) )
 
 
-		if Pagerunner.debugOn:	
-			print('starting init process')
-		Pagerunner.crawlPage(Pagerunner.nextLink())
+		
 
 
 
@@ -175,8 +177,8 @@ class Pagerunner:
 
 	@staticmethod
 	def notVisitedIsEmpty():
-		with Pagerunner.notvisitedLock:
-			return Pagerunner.notvisited.empty()
+		with Pagerunner.notVisitedLock:
+			return Pagerunner.notVisited.empty()
 	
 	@staticmethod
 	def responsesIsEmpty():
@@ -185,14 +187,14 @@ class Pagerunner:
 
 	@staticmethod
 	def addLink(newLink):
-		with Pagerunner.notvisitedLock:
-			Pagerunner.notvisited.put(newLink)
+		with Pagerunner.notVisitedLock:
+			Pagerunner.notVisited.put(newLink)
 
 	@staticmethod
 	def addLinks(newLinks):
-		with Pagerunner.notvisitedLock:
+		with Pagerunner.notVisitedLock:
 			for  newLink in newLinks:
-				Pagerunner.notvisited.put(newLink)
+				Pagerunner.notVisited.put(newLink)
 	
 	@staticmethod
 	def pageVisited(pageUrl):	
@@ -209,8 +211,8 @@ class Pagerunner:
 	def nextLink():
 		nextLink = None
 		counter = 1
-		with Pagerunner.notvisitedLock:
-			nextLink =Pagerunner.notvisited.get(False)
+		with Pagerunner.notVisitedLock:
+			nextLink =Pagerunner.notVisited.get(False)
 		return nextLink
 
 	@staticmethod		
@@ -226,7 +228,7 @@ class Pagerunner:
 
 	taboos: ''' + str(Pagerunner.tabooWords) + '''
 					
-	notVisited: ''' + str(Pagerunner.notvisited.qsize()) + '''
+	notVisited: ''' + str(Pagerunner.notVisited.qsize()) + '''
 
 	threads: ''' + str(Pagerunner.threads) )
 
@@ -267,47 +269,66 @@ class Pagerunner:
 			Pagerunner.visited.add(pageUrl)
 		
 		except URLError as e:
-			print(e)
-			print(pageUrl)
-			returnlints =  set()
+			print(str(e) + ' : ' +  pageUrl)
+			returnlinks =  set()
+
 		except UnicodeDecodeError as e:
-			print(e)
-			print(pageUrl)
-			returnlints =  set()
+			print(str(e) + ' : ' +  pageUrl)
+			returnlinks =  set()
+
 		except UnicodeEncodeError as e:
-			print(e)
-			print(pageUrl)
-			returnlints =  set()
+			print(str(e) + ' : ' +  pageUrl)			
+			returnlinks =  set()
+
 		except ConnectionResetError as e:
-			print(e)
-			print(pageUrl)
-			returnlints =  set()
+			print(str(e) + ' : ' +  pageUrl)
+			returnlinks =  set()
+
 		except ConnectionResetError as e:
-			print(e)
-			print(pageUrl)
-			returnlints =  set()
+			print(str(e) + ' : ' +  pageUrl)
+			returnlinks =  set()
+
 		except IncompleteRead as e:
-			print(e)
-			print(pageUrl)
-			returnlints =  set()
+			print(str(e) + ' : ' +  pageUrl)
+			returnlinks =  set()
 
 		finally:
 			Pagerunner.visited.add(pageUrl)
 
 		return returnlinks 
 
+	@staticmethod
+	def getOnlyResponse(url):
+		response = None
+		try:	
+			request=Request(pageUrl,None,Pagerunner.headers) #The assembled request
+			response = urlopen(request)
+
+		except URLError as e:
+			print(str(e) + ' : ' +  pageUrl)
+			
+		except UnicodeDecodeError as e:
+			print(str(e) + ' : ' +  pageUrl)
+
+		except UnicodeEncodeError as e:
+			print(str(e) + ' : ' +  pageUrl)
+			
+		except ConnectionResetError as e:
+			print(str(e) + ' : ' +  pageUrl)
+
+		except ConnectionResetError as e:
+			print(str(e) + ' : ' +  pageUrl)
+
+		except IncompleteRead as e:
+			print(str(e) + ' : ' +  pageUrl)
+
+		finally:
+			return response
 	
 
 	@staticmethod
 	def functionThreadWork():
 		while (not Pagerunner.notVisitedIsEmpty()) or (not Pagerunner.responsesIsEmpty()):
-
-			
-			#print('current time: ' + str(time.time()) +'\ntime of last save: ' + str(Pagerunner.timeOfLastSave))
-			if Pagerunner.saveInterval and time.time() - Pagerunner.saveInterval  > Pagerunner.timeOfLastSave:
-				print('saving progress')
-				Pagerunner.saveProgress()
-				Pagerunner.timeOfLastSave = time.time()
 
 			if not Pagerunner.responsesIsEmpty():
 				
@@ -318,13 +339,14 @@ class Pagerunner:
 				if pageUrl not in Pagerunner.processed:
 					Pagerunner.module.pipe( pageUrl,response,isLastRun=False)
 					Pagerunner.processed.add(pageUrl)
-		
-		
+			
 
-
+			if Pagerunner.saveInterval and time.time() - Pagerunner.saveInterval  > Pagerunner.timeOfLastSave:
+				print('saving progress')
+				Pagerunner.saveProgress()
+				Pagerunner.timeOfLastSave = time.time()
+		
 		Pagerunner.module.pipe( None,None,isLastRun=True)
-
-
 
 	@staticmethod 
 	def saveProgress():
@@ -336,16 +358,16 @@ class Pagerunner:
 		if not os.path.exists(savePath):
 			os.makedirs(savePath)
 
-		with Pagerunner.visitedLock, Pagerunner.notvisitedLock, Pagerunner.responseLock:
+		with Pagerunner.visitedLock, Pagerunner.notVisitedLock, Pagerunner.responseLock:
 
-			with open(savePath+ time.ctime() + '.txt', 'w') as file:
+			with open(savePath+ time.ctime() + '.save', 'w') as file:
 				
 				file.write('[visited]\n')
 				for elem in Pagerunner.visited:
 					file.write(elem + '\n')
 
-				file.write('[not visited]\n')
-				for elem in list(Pagerunner.notvisited.queue):
+				file.write('[notVisited]\n')
+				for elem in list(Pagerunner.notVisited.queue):
 					file.write(str(elem) + '\n')
 
 				file.write('[processed]\n')
@@ -354,28 +376,67 @@ class Pagerunner:
 
 				file.write('[responses]\n')
 				for elem in list(Pagerunner.responses.queue):
-					file.write(str(elem) + '\n')
+					file.write(str(elem[0]) + '\n')
 
 				file.write('[domains]\n')
 				for elem in Pagerunner.domains:
 					file.write(elem + '\n')
 
-				file.write('[taboo words]\n')
+				file.write('[tabooWords]\n')
 				for elem in Pagerunner.tabooWords:
 					file.write(elem + '\n')
 
-				file.write('[start address]\n')
+				file.write('[startAddress]\n')
 				file.write(Pagerunner.startAddress + '\n')
 				file.write('[verboseOn]\n')
 				file.write(str(Pagerunner.verboseOn) + '\n')
-				file.write('[DebugOn]\n')
+				file.write('[debugOn]\n')
 				file.write(str(Pagerunner.debugOn) + '\n')
-				file.write('[Module]\n')
+				file.write('[moduleFilePath]\n')
 				file.write(str(Pagerunner.moduleFilePath) + '\n')
 				
 		if Pagerunner.debugOn or Pagerunner.verboseOn:
 			print('save complete')
 
 
+	@staticmethod
 	def load(loadPath):
-		pass
+		currentTag = None
+		with open(loadPath, 'r') as file:
+			print('Loading from ' + loadPath)
+			for line in file:
+				if '[' in line and ']\n' in line:
+					currentTag = line.replace('[', '').replace(']', '').replace('\n' , '')
+
+				elif currentTag == 'visited':
+					Pagerunner.visited.add(line.replace('\n' , ''))
+
+				elif currentTag == 'notVisited':
+					Pagerunner.notVisited.put(line.replace('\n' , ''))
+
+				elif currentTag == 'processed':
+					Pagerunner.processed.add(line.replace('\n' , ''))
+
+				elif currentTag == 'responses':
+					Pagerunner.responses.put((line.replace('\n', '') , Pagerunner.getOnlyResponse(line.replace('\n', ''))))
+
+				elif currentTag == 'domains':
+					Pagerunner.domains.add(line.replace('\n' , ''))
+
+				elif currentTag == 'tabooWords':
+					Pagerunner.tabooWords.add(line.replace('\n' , ''))
+
+				elif currentTag == 'startAddress':
+					Pagerunner.startAddress = line.replace('\n', '')
+
+				elif currentTag == 'verboseOn':
+					Pagerunner.verboseOn = bool(line.replace('\n', ''))
+
+				elif currentTag == 'debugOn':
+					Pagerunner.DebugOn = bool(line.replace('\n', ''))
+
+				elif currentTag == 'moduleFilePath':
+					Pagerunner.moduleFilePath = line.replace('\n', '')
+
+
+

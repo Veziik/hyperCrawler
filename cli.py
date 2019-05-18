@@ -92,6 +92,7 @@ def parse():
 					arguments['saveInterval'] = 60
 			elif sys.argv[i].lower() == '-l':
 				arguments['loadPath'] = sys.argv[i+1] 
+				
 
 	return arguments
 
