@@ -41,15 +41,15 @@ def checkFormat(url):
 
 def parseToSet(startingIndex, numberOfArguments):
 	i = startingIndex + 1
-	taboos = set()
+	newset = set()
 	while i < numberOfArguments:
 		if '-' in sys.argv[i]:
 			break
 		
-		taboos.add(sys.argv[i])
+		newset.add(sys.argv[i])
 		i+=1 
 
-	return taboos
+	return newset
 
 def parse():
 	arguments = dict()
@@ -64,6 +64,7 @@ def parse():
 	arguments['threads'] = os.cpu_count() * 10
 	arguments['modulePath'] = None
 	arguments['taboos'] = set()
+	arguments['focus'] = set()
 	arguments['domains'] = set()
 	arguments['saveInterval'] = None
 	arguments['loadPath'] = None
@@ -80,6 +81,8 @@ def parse():
 				arguments['modulePath']= sys.argv[i+1]
 			elif sys.argv[i].lower() == '-t': 
 				arguments['taboos'] = parseToSet(i, len(sys.argv))
+			elif sys.argv[i].lower() == '-f': 
+				arguments['focus'] = parseToSet(i, len(sys.argv))
 			elif sys.argv[i].lower() == '-d': 
 				arguments['domains'] = parseToSet(i, len(sys.argv))
 			elif sys.argv[i].lower() == '-h' or sys.argv[i].lower() == '--help':
@@ -105,7 +108,7 @@ def main():
 		print('taboos: ' + str(arguments['taboos']))
 
 
-	Pagerunner(newStartAddress=arguments['website'], newDomains=arguments['domains'], newTabooWords=arguments['taboos'], newDebugOn=arguments['debug'], newVerboseOn=arguments['verbose'], newThreadCount=arguments['threads'],newModuleFilePath=arguments['modulePath'], newSaveInterval=arguments['saveInterval'], newLoadPath=arguments['loadPath'])
+	Pagerunner(newStartAddress=arguments['website'], newDomains=arguments['domains'], newTabooWords=arguments['taboos'], newDebugOn=arguments['debug'], newVerboseOn=arguments['verbose'], newThreadCount=arguments['threads'],newModuleFilePath=arguments['modulePath'], newSaveInterval=arguments['saveInterval'], newLoadPath=arguments['loadPath'], newFocusWords=arguments['focus'])
 	#Pagerunner.startThreads()
 	
 	

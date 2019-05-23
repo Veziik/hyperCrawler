@@ -30,34 +30,39 @@ class DoNothing(object):
 
 class Pagerunner:
 
-	startAddress = ''	#	#	#	#	#The starting Address for the search
-	module = None						#class which the pagerunner uses to perform actions on each page 
+	startAddress = ''					#The starting Address for the search
+	module = None	#	#	#	#	#	#class which the pagerunner uses to perform actions on each page 
 	moduleFilePath = None				#Path of the module that the webcrawler uses
 	debugOn = False		#	#	#	#	#Enables/Disables debug text 
 	verboseOn = False					#Enables/Disables verbose text (less detailed than debug text)
 	domains = set()	#	#	#	#	#	#Domains that the runner is allowed to traverse
 	tabooWords = set()					#Keywords that ban links from being searched by the runner
-	responses = queue.Queue()	#	#	#responses that have yet to be processed
-	processed = set()					#domains that the function thread has processed
-	notVisited = queue.Queue()	#	#	#Adressses that the runner has not yet visited
-	visited = set()						#Addresses tnat the runner has visited
-	responseLock = threading.RLock()#	#Threading Lock for adding to the responses queue
-	visitedLock = threading.RLock()		#Threading Lock for adding to the visited list
+	focusWords = set()	#	#	#	#	#keywords that the prosepective url must have in order to scan
+	responses = queue.Queue()			#responses that have yet to be processed
+	processed = set()	#	#	#	#	#domains that the function thread has processed
+	notVisited = queue.Queue()			#Adressses that the runner has not yet visited
+	visited = set()		#	#	#	#	#Addresses tnat the runner has visited
+	responseLock = threading.RLock()	#Threading Lock for adding to the responses queue
+	visitedLock = threading.RLock()	#	#Threading Lock for adding to the visited list
 	notVisitedLock = threading.RLock()	#Threading Lock for adding to the queue
-	saveFolder = 'saves/'				#Save directory for the crawler
-	threads = set()	#	#	#	#	#	#List of the threads in use 
-	timeOfLastSave = None				#Time of the last save function
-	saveInterval = None	#	#	#	#	#Time elapsed since the last save operation
-	startFromLoad = None				#whether or not the program is starting from as savefile
+	saveFolder = 'saves/'	#	#	#	#Save directory for the crawler
+	threads = set()						#List of the threads in use 
+	timeOfLastSave = None	#	#	#	#Time of the last save function
+	saveInterval = None					#Time elapsed since the last save operation
+	
+
 										#Next Line is the headers the runner uses when sending a request
 	headers = {'Connection' : 'keep-alive', 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/61.0.3163.100 Safari/537.36',}
 
 
-	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=None, newDebugOn=False, newVerboseOn = False,  newThreadCount = 1, newModuleFilePath=None, newSaveInterval = None, newLoadPath=None ):
+	def __init__(self, newStartAddress=None, newDomains=None, newTabooWords=None, newDebugOn=False, newVerboseOn = False,  newThreadCount = 1, newModuleFilePath=None, newSaveInterval = None, newLoadPath=None,newFocusWords=None ):
 		if not Pagerunner.startAddress:
 			Pagerunner.startAddress = newStartAddress
 		
 		Pagerunner.addLink(newStartAddress)
+
+		if newFocusWords:
+			Pagerunner.focusWords = newFocusWords
 
 		if newSaveInterval:
 			Pagerunner.saveInterval = newSaveInterval
@@ -234,8 +239,17 @@ class Pagerunner:
 
 
 		forbidden = True 
+
 		if get_domain_name(pageUrl) in Pagerunner.domains:
 			forbidden = False
+
+		count = 0
+		for focus in Pagerunner.focusWords:
+			if focus in pageUrl:
+				count+=1
+
+		if count < len(Pagerunner.focusWords):
+			forbidden = True				
 
 		for taboo in Pagerunner.tabooWords:
 			forbidden = forbidden or (taboo in pageUrl)
@@ -386,6 +400,11 @@ class Pagerunner:
 				for elem in Pagerunner.tabooWords:
 					file.write(elem + '\n')
 
+				file.write('[focusWords]\n')
+				for elem in Pagerunner.focusWords:
+					file.write(elem + '\n')
+
+
 				file.write('[startAddress]\n')
 				file.write(Pagerunner.startAddress + '\n')
 				file.write('[verboseOn]\n')
@@ -425,6 +444,9 @@ class Pagerunner:
 
 				elif currentTag == 'tabooWords':
 					Pagerunner.tabooWords.add(line.replace('\n' , ''))
+
+				elif currentTag == 'focusWords':
+					Pagerunner.focusWords.add(line.replace('\n' , ''))
 
 				elif currentTag == 'startAddress':
 					Pagerunner.startAddress = line.replace('\n', '')
