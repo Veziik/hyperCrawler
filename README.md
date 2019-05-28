@@ -10,13 +10,13 @@ Built from the framework prvided by thenewbostion, but improves on speed with fa
 
 Options
 
-	-v: verbose output, prints more to the screen while it works
-	-m <filename>: module to use, cli implementation requires a class named webpagehandler and the function pipe(self,url,response,isLastRun)	
-	-d <domain 1> ... : adds listed domains to the set of authorized domains
-	-t <taboo 1> ... : adds listed taboos to the set of keywords websites may not have in order to be visited
-	-s <interval> : saves every <interval> seconds
-	--debug: debug mode, prints the status of all of the data structures in use for the duration of the run in each iteration
-	--threads [int]: manually specify the number of threads to use
+	-v 			: verbose output, prints more to the screen while it works
+	-m <filename>		: module to use, cli implementation requires a class named webpagehandler and the function pipe(self,url,response,isLastRun)	
+	-d <domain 1> ...	: adds listed domains to the set of authorized domains
+	-t <taboo 1> ... 	: adds listed taboos to the set of keywords websites may not have in order to be visited
+	-s <interval> 		: saves every <interval> seconds
+	--debug 		: debug mode, prints the status of all of the data structures in use for the duration of the run in each iteration
+	--threads [int] 	: manually specify the number of threads to use
 
 
 
