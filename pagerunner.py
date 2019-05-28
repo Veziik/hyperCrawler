@@ -181,6 +181,14 @@ class Pagerunner:
 		Pagerunner.tabooWords.remove(oldTaboowords)
 
 	@staticmethod
+	def addFocusWords(newFocusWords):
+		Pagerunner.focusWords.add(newFocusWords)
+
+	@staticmethod
+	def removeTabooWords(oldFocusWords):
+		Pagerunner.tabooWords.remove(oldFocusWords)
+
+	@staticmethod
 	def notVisitedIsEmpty():
 		with Pagerunner.notVisitedLock:
 			return Pagerunner.notVisited.empty()
