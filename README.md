@@ -27,15 +27,15 @@ then set arguments:
 
 the crawler will immediately start the scan with given arguments, optional arguments are as follows:
 	
-	newStartAddress=None	(string)	: Starting address of the crawler
-	newModuleFilePath=None	(string)	: File path of module containing user's custom function
-	newLoadPath=None		(string)	: File path of savefile to load from, overrides all other options 
+	newStartAddress=None	(string): Starting address of the crawler
+	newModuleFilePath=None	(string): File path of module containing user's custom function
+	newLoadPath=None	(string): File path of savefile to load from, overrides all other options 
 	newDomains=None		(set) 	: Domains within which the crawler must remain, 'None' gives no restrictions
-	newTabooWords=None		(set)	: Words which any prospective URL must not contain in order to be scanned
-	newFocusWords=None		(set)	: Words which any prospective URL must contain in order to be scanned
-	newDebugOn=False		(bool)	: Toggles the printing of the module's debug text
+	newTabooWords=None	(set)	: Words which any prospective URL must not contain in order to be scanned
+	newFocusWords=None	(set)	: Words which any prospective URL must contain in order to be scanned
+	newDebugOn=False	(bool)	: Toggles the printing of the module's debug text
 	newVerboseOn = False	(bool)	: Toggles the printing of the module's vebose output, less detailed than the debug flag
-	newThreadCount = 1		(int)	: Specifies the number of threads to use, recommended is coresx10 
+	newThreadCount = 1	(int)	: Specifies the number of threads to use, recommended is coresx10 
 	newSaveInterval = None	(int)	: Specifies time, in seconds, between save operations
 
 
