@@ -1,8 +1,8 @@
-#hypercrawler
+# hypercrawler
 
 Built from the framework prvided by thenewbostion, but improves on speed with faster data structures.
 	
-#Command Line
+## Command Line
 	usage: ./cli.py <URL>
 
 Options
@@ -15,7 +15,7 @@ Options
 	--debug: debug mode, prints the status of all of the data structures in use for the duration of the run in each iteration
 	--threads [int]: manually specify the number of threads to use
 
-#import documentation
+## import documentation
 
 First import:
 
@@ -39,6 +39,6 @@ the crawler will immediately start the scan with given arguments, arguments are 
 	newSaveInterval = None	(int)	: Specifies time, in seconds, between save operations
 
 
-#more on importing custom functions
+### more on importing custom functions
 
-if given the path to a module, the crawler will attempt to import the module "WebpageHelper" and execute the function "pipe(self, pageUrl,response, isLastRun)"
+if given the path to a module, the crawler will attempt to import the module `WebpageHelper` and execute the function `pipe(self, pageUrl,response, isLastRun)`
