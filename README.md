@@ -2,6 +2,9 @@
 
 Built from the framework prvided by thenewbostion, but improves on speed with faster data structures.
 	
+
+
+
 ## Command Line
 	usage: ./cli.py <URL>
 
@@ -14,6 +17,8 @@ Options
 	-s <interval> : saves every <interval> seconds
 	--debug: debug mode, prints the status of all of the data structures in use for the duration of the run in each iteration
 	--threads [int]: manually specify the number of threads to use
+
+
 
 ## Documentation for non-CLI use
 
@@ -37,6 +42,9 @@ the crawler will immediately start the scan with given arguments, optional argum
 	newVerboseOn = False	(bool)	: Toggles the printing of the module's vebose output, less detailed than the debug flag
 	newThreadCount = 1	(int)	: Specifies the number of threads to use, recommended is coresx10 
 	newSaveInterval = None	(int)	: Specifies time, in seconds, between save operations
+
+
+
 
 
 ### Importing custom functions
